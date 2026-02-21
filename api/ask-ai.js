@@ -20,44 +20,42 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Missing API key" });
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: question }],
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: `Answer this clearly for an AI student:\n\n${question}` }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.5,
+            maxOutputTokens: 512,
           },
-        ],
-        generationConfig: {
-          temperature: 0.6,
-          maxOutputTokens: 512,
-        },
-      }),
-    });
+        }),
+      }
+    );
 
     const data = await response.json();
 
-    // Helpful debug (remove later)
-    console.log("Gemini raw response:", JSON.stringify(data));
-
     const answer =
-      data?.candidates?.[0]?.content?.parts?.map(p => p.text).join("") ||
+      data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") ||
       null;
 
     if (!answer) {
+      console.error("Gemini raw:", JSON.stringify(data));
       return res.status(200).json({
         answer:
-          "Gemini returned no text. This may be due to quota limits or safety filters. Try a different question.",
+          "Gemini did not return text (quota/safety/permission issue). Try again later.",
       });
     }
 
     return res.status(200).json({ answer });
   } catch (err) {
-    console.error("AI backend error:", err);
+    console.error("Backend error:", err);
     return res.status(500).json({ error: "AI backend error" });
   }
 }

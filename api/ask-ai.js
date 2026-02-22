@@ -66,7 +66,7 @@ Avoid hallucinations. If unsure, say you’re not sure.
           { role: "user", content: question },
         ],
         temperature: 0.4,
-        max_tokens: 1024,
+        max_tokens: 2048,
       }),
     });
 
